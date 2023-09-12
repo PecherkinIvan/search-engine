@@ -20,7 +20,7 @@ public class LemmaFinder {
     }
 
 
-    public Map<String, Integer> collectLemmas(String text) {
+    public static Map<String, Integer> collectLemmas(String text) {
         String[] words = arrayContainsRussianWords(text);
         HashMap<String, Integer> lemmas = new HashMap<>();
 
@@ -53,7 +53,7 @@ public class LemmaFinder {
     }
 
 
-    public Set<String> getLemmaSet(String text) {
+    public static Set<String> getLemmaSet(String text) {
         String[] textArray = arrayContainsRussianWords(text);
         Set<String> lemmaSet = new HashSet<>();
         for (String word : textArray) {
@@ -68,11 +68,11 @@ public class LemmaFinder {
         return lemmaSet;
     }
 
-    private boolean anyWordBaseBelongToParticle(List<String> wordBaseForms) {
-        return wordBaseForms.stream().anyMatch(this::isParticle);
+    private static boolean anyWordBaseBelongToParticle(List<String> wordBaseForms) {
+        return wordBaseForms.stream().anyMatch(LemmaFinder::isParticle);
     }
 
-    private boolean isParticle(String wordBase) {
+    private static boolean isParticle(String wordBase) {
         for (String property : particlesNames) {
             if (wordBase.toUpperCase().contains(property)) {
                 return true;
@@ -81,14 +81,14 @@ public class LemmaFinder {
         return false;
     }
 
-    private String[] arrayContainsRussianWords(String text) {
+    private static String[] arrayContainsRussianWords(String text) {
         return text.toLowerCase(Locale.ROOT)
                 .replaceAll("([^а-я\\s])", " ")
                 .trim()
                 .split("\\s+");
     }
 
-    private boolean isCorrectWordForm(String word) {
+    private static boolean isCorrectWordForm(String word) {
         List<String>  morphForms = luceneMorphology.getMorphInfo(word);
         for (String form : morphForms) {
             if (form.matches(WORD_TYPE_REGEX)) {

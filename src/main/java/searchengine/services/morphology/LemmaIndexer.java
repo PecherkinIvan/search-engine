@@ -5,24 +5,33 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.stereotype.Component;
+import searchengine.model.Index;
+import searchengine.model.Lemma;
+import searchengine.model.Page;
+import searchengine.model.Site;
+import searchengine.repositories.RepositoryIndex;
+import searchengine.repositories.RepositoryLemma;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class LemmaIndexer {
-    private final LemmaFinder lemmaFinder;
+@RequiredArgsConstructor
+public class LemmaIndexer implements Runnable {
 
-    public LemmaIndexer() {
-        lemmaFinder = new LemmaFinder();
-    }
+    private final Site modelSite;
+    private final Page modelPage;
+    private final RepositoryLemma repositoryLemma;
+    private final RepositoryIndex repositoryIndex;
 
-    public Map<String, Integer> getLemmaMap(String content) {
-        Map<String, Integer> lemmas = new HashMap<>();
-        String text = clearContentFromTag(content, "body");
-        lemmas = lemmaFinder.collectLemmas(text);
-        return lemmas;
+    @Override
+    public void run() {
+        String content = modelPage.getContent();
+        String title = clearContentFromTag(content, "title");
+        String body = clearContentFromTag(content, "body");
+        String text = title.concat(" " + body);
+
+        Map<String, Integer> lemmas = LemmaFinder.collectLemmas(text);
+        lemmas.forEach(this::saveLemmaAndIndex);
     }
 
     private String clearContentFromTag(String content, String tag) {
@@ -30,5 +39,27 @@ public class LemmaIndexer {
         Elements elements = document.select(tag);
         String html = elements.stream().map(Element::html).collect(Collectors.joining());
         return Jsoup.parse(html).text();
+    }
+
+    private void saveLemmaAndIndex(String lemma, Integer count) {
+        synchronized (modelSite) {
+            Lemma lemmaDB = repositoryLemma.findByLemmaAndSite(lemma, modelSite);
+            if (lemmaDB == null) {
+                Lemma lemmaNew = new Lemma();
+                lemmaNew.setSite(modelSite);
+                lemmaNew.setLemma(lemma);
+                lemmaNew.setFrequency(1);
+                lemmaDB = repositoryLemma.save(lemmaNew);
+            }
+            else {
+                lemmaDB.setFrequency(lemmaDB.getFrequency() + 1);
+                repositoryLemma.save(lemmaDB);
+            }
+            Index index = new Index();
+            index.setPage(modelPage);
+            index.setRank(count);
+            index.setLemma(lemmaDB);
+            repositoryIndex.save(index);
+        }
     }
 }

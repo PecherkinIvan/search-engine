@@ -9,10 +9,10 @@ import searchengine.config.SitesList;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.model.Page;
 import searchengine.model.Site;
-import searchengine.repositories.RepositoryPage;
-import searchengine.repositories.RepositorySite;
+import searchengine.repositories.*;
+import searchengine.services.index.SiteIndexer;
+import searchengine.services.morphology.LemmaIndexer;
 import searchengine.services.parse.LinkParser;
-import searchengine.services.parse.LinkParserRecursiveAction;
 
 import java.io.IOException;
 import java.util.Date;
@@ -31,6 +31,11 @@ public class IndexingServiceImpl implements IndexingService {
     private RepositorySite repositorySite;
     @Autowired
     private RepositoryPage repositoryPage;
+    @Autowired
+    private RepositoryLemma repositoryLemma;
+    @Autowired
+    private RepositoryIndex repositoryIndex;
+    private ForkJoinPool fjp;
 
     @Override
     public IndexingResponse startIndexing() {
@@ -47,14 +52,9 @@ public class IndexingServiceImpl implements IndexingService {
                 Site modelSite = new Site(Site.Status.INDEXING, new Date(), normalUrl(site.getUrl()), site.getName());
                 repositorySite.save(modelSite);
 
-                ForkJoinPool fjp = new ForkJoinPool();
-                fjp.invoke( new LinkParserRecursiveAction(site.getUrl().replace("www.", ""), modelSite, repositoryPage, repositorySite) ); // Убрать www.
+                fjp = new ForkJoinPool();
+                fjp.invoke(new SiteIndexer(modelSite, repositoryPage, repositorySite, repositoryLemma, repositoryIndex));
 
-                if (LinkParserRecursiveAction.getIsStop()){
-                    fjp.shutdownNow();
-                    System.out.println("STOP");
-                    break;
-                }
 
                 modelSite.setStatusTime(new Date());
                 modelSite.setStatus(Site.Status.INDEX);
@@ -68,7 +68,8 @@ public class IndexingServiceImpl implements IndexingService {
 
     @Override
     public IndexingResponse stopIndexing() {
-        LinkParserRecursiveAction.stop();
+        fjp.shutdownNow();
+        System.out.println("STOP");
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.schedule(() -> {
             List<Site> all = (List<Site>) repositorySite.findAll();
@@ -121,6 +122,7 @@ public class IndexingServiceImpl implements IndexingService {
                     String content = LinkParser.getContent(connection);
                     Page newPage = new Page(modelSite, path, statusCode, content);
                     repositoryPage.save(newPage);
+                    new Thread(new LemmaIndexer(modelSite, newPage, repositoryLemma, repositoryIndex)).start();
                     return new IndexingResponse(true, null);
 
                 } catch (IOException ex) {
@@ -153,3 +155,4 @@ public class IndexingServiceImpl implements IndexingService {
         return sitesList.getSites().stream().anyMatch(site -> site.getUrl().equals(url));
     }
 }
+
