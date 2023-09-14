@@ -49,7 +49,7 @@ public class IndexingServiceImpl implements IndexingService {
 
         new Thread(() -> {
             for (searchengine.config.Site site : sitesList.getSites()) {
-                Site modelSite = new Site(Site.Status.INDEXING, new Date(), normalUrl(site.getUrl()), site.getName());
+                Site modelSite = new Site(Site.Status.INDEXING, new Date(), site.getUrl(), site.getName());
                 repositorySite.save(modelSite);
 
                 fjp = new ForkJoinPool();
@@ -97,7 +97,7 @@ public class IndexingServiceImpl implements IndexingService {
             String siteCgfUrl = normalUrl(siteCgf.getUrl());
             if (url.contains(siteCgfUrl)) {
 
-                Site modelSite = repositorySite.findEntitySiteByUrl(siteCgfUrl);
+                Site modelSite = repositorySite.findEntitySiteByUrl(siteCgf.getUrl());
                 String path = url.substring(modelSite.getUrl().replace("www.", "").length());
                 path = path.equals("") ? "/" : path;
 
@@ -108,7 +108,7 @@ public class IndexingServiceImpl implements IndexingService {
                     }
                 }
                 else {
-                    modelSite = new Site(Site.Status.INDEXING, new Date(), siteCgfUrl, siteCgf.getName());
+                    modelSite = new Site(Site.Status.INDEXING, new Date(), siteCgf.getUrl(), siteCgf.getName());
                     repositorySite.save(modelSite);
                 }
 

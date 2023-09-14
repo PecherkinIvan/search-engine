@@ -8,4 +8,6 @@ import searchengine.model.Site;
 @Repository
 public interface RepositoryLemma extends CrudRepository<Lemma, Long> {
     Lemma findByLemmaAndSite(String lemma, Site site);
+
+    Integer countBySite(Site site);
 }

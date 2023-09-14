@@ -94,7 +94,7 @@ public class SiteIndexer extends RecursiveAction {
 
 
     private String getPath(String url) {
-        String path = url.substring(modelSite.getUrl().length());  // Убрал www
+        String path = url.substring(modelSite.getUrl().replace("www.", "").length());
         return path.equals("") ? "/" : path;
     }
 }
