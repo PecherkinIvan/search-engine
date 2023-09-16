@@ -16,8 +16,8 @@ public class Site {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    @Enumerated(EnumType.STRING)  // Могут быть ошибки при создании
-    @Column(columnDefinition = "ENUM", nullable = false)
+    @Enumerated(EnumType.STRING)
+    //@Column(columnDefinition = "ENUM", nullable = false)
     private Status status;
 
     @Column(name = "status_time", columnDefinition = "DATETIME", nullable = false)

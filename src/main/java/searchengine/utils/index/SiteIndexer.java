@@ -1,4 +1,4 @@
-package searchengine.services.index;
+package searchengine.utils.index;
 
 import org.jsoup.Connection;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +8,8 @@ import searchengine.repositories.RepositoryIndex;
 import searchengine.repositories.RepositoryLemma;
 import searchengine.repositories.RepositoryPage;
 import searchengine.repositories.RepositorySite;
-import searchengine.services.morphology.LemmaIndexer;
-import searchengine.services.parse.LinkParser;
+import searchengine.utils.morphology.LemmaIndexer;
+import searchengine.utils.parse.LinkParser;
 
 import java.io.IOException;
 import java.util.Date;
@@ -29,7 +29,8 @@ public class SiteIndexer extends RecursiveAction {
     private static RepositoryLemma repositoryLemma;
     @Autowired
     private static RepositoryIndex repositoryIndex;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(16);
+    private static boolean isIndexing = true;
+
 
 
     public SiteIndexer(Site site, RepositoryPage repositoryPage, RepositorySite repositorySite,
@@ -43,6 +44,7 @@ public class SiteIndexer extends RecursiveAction {
         SiteIndexer.repositoryIndex = repositoryIndex;
         fullUrls = ConcurrentHashMap.newKeySet();
         fullUrls.add(url);
+        isIndexing = true;
     }
 
     private SiteIndexer(String url) {
@@ -51,6 +53,9 @@ public class SiteIndexer extends RecursiveAction {
 
     @Override
     protected void compute() {
+
+        if (!isIndexing) return;
+
         CopyOnWriteArrayList<SiteIndexer> taskList = new CopyOnWriteArrayList<>();
         ConcurrentSkipListSet<String> links = new ConcurrentSkipListSet<>();
         Connection connection = LinkParser.getConnection(url);
@@ -74,13 +79,10 @@ public class SiteIndexer extends RecursiveAction {
 
 
         // Создание и сохранение лемм, индексов
-        try {
-            executorService.submit(new LemmaIndexer(modelSite, pageNew, repositoryLemma, repositoryIndex)).get();
-        } catch (InterruptedException | ExecutionException ex) {
-            ex.printStackTrace();
-        }
+        new LemmaIndexer(modelSite, pageNew, repositoryLemma, repositoryIndex).run();
 
         for (String link : links) {
+            if (!isIndexing) return;
             if (link.contains(url) && !fullUrls.contains(link)) {
                 SiteIndexer task = new SiteIndexer(link);
                 fullUrls.add(link);
@@ -92,6 +94,13 @@ public class SiteIndexer extends RecursiveAction {
 
     }
 
+    public static void stopIndexing() {
+        isIndexing = false;
+    }
+
+    public static boolean isIndexing() {
+        return isIndexing;
+    }
 
     private String getPath(String url) {
         String path = url.substring(modelSite.getUrl().replace("www.", "").length());

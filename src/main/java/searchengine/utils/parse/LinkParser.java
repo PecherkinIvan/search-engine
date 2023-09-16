@@ -1,4 +1,4 @@
-package searchengine.services.parse;
+package searchengine.utils.parse;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;

@@ -1,4 +1,4 @@
-package searchengine.services.morphology;
+package searchengine.utils.morphology;
 
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
@@ -15,15 +15,9 @@ import searchengine.repositories.RepositoryLemma;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
-public class LemmaIndexer implements Runnable {
+public record LemmaIndexer(Site modelSite, Page modelPage,
+                           RepositoryLemma repositoryLemma, RepositoryIndex repositoryIndex) {
 
-    private final Site modelSite;
-    private final Page modelPage;
-    private final RepositoryLemma repositoryLemma;
-    private final RepositoryIndex repositoryIndex;
-
-    @Override
     public void run() {
         String content = modelPage.getContent();
         String title = clearContentFromTag(content, "title");
