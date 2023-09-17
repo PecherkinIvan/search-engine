@@ -123,7 +123,6 @@ public class IndexingService implements IndexingServiceInter {
         Page oldPage = repositoryPage.findEntityPageByPath(path);
         if (oldPage != null) {
             List<Index> entities = repositoryIndex.findByPageIn(oldPage);
-            System.out.println(entities);
             entities.forEach(entity -> {
                 Lemma lemma = entity.getLemma();
                 lemma.setFrequency(lemma.getFrequency() - 1);
