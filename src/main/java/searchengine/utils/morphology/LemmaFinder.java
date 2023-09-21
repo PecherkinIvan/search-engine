@@ -30,7 +30,7 @@ public class LemmaFinder {
             if (word.isBlank()) continue;
 
             List<String> wordBaseForms = getMorphInfo(word);
-            if (anyWordBaseBelongToParticle(wordBaseForms)) {
+            if (wordBaseForms.isEmpty() || anyWordBaseBelongToParticle(wordBaseForms)) {
                 continue;
             }
 
@@ -69,14 +69,21 @@ public class LemmaFinder {
         if (word.matches("[а-я]+")) {
             return luceneMorphologyRu.getMorphInfo(word);
         }
-        return luceneMorphologyEn.getMorphInfo(word);
+        else if (word.matches("[a-z]+")) {
+            return luceneMorphologyEn.getNormalForms(word);
+        }
+        System.out.println(word);
+        return new ArrayList<>();
     }
 
     private static List<String> getNormalForms(String word) {
         if (word.matches("[а-я]+")) {
             return luceneMorphologyRu.getNormalForms(word);
         }
-        return luceneMorphologyEn.getNormalForms(word);
+        else if (word.matches("[a-z]+")) {
+            return luceneMorphologyEn.getNormalForms(word);
+        }
+        return new ArrayList<>();
     }
 
     private static String[] arrayContainsWords(String text) {
