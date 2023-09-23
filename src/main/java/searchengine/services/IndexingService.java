@@ -90,7 +90,7 @@ public class IndexingService implements IndexingServiceInter {
     }
 
     @Override
-    public IndexingResponse indexPage(String url) {
+    public synchronized IndexingResponse indexPage(String url) {
 
         if (url.trim().isEmpty()) {
             return new IndexingResponse(false, "Страница не указана");
@@ -124,6 +124,7 @@ public class IndexingService implements IndexingServiceInter {
         if (oldPage != null) {
             List<Index> entities = repositoryIndex.findByPageIn(oldPage);
             entities.forEach(entity -> {
+                System.out.println(entity.getPage());
                 Lemma lemma = entity.getLemma();
                 lemma.setFrequency(lemma.getFrequency() - 1);
                 repositoryLemma.save(lemma);
@@ -151,6 +152,7 @@ public class IndexingService implements IndexingServiceInter {
             System.out.println(ex + " -- " + url);
             return new IndexingResponse(false, "Ошибка подключения");
         }
+
     }
 
     private boolean isIndexing() {

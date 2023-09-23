@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface RepositoryIndex extends CrudRepository<Index, Long> {
 
-    @Query("SELECT e FROM Index e WHERE e.page = page")
+    @Query("SELECT e FROM Index AS e WHERE e.page =:page")
     List<Index> findByPageIn(Page page);
 }
