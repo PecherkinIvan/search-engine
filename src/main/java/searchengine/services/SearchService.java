@@ -63,7 +63,8 @@ public class SearchService implements SearchServiceInter {
         });
 
 
-        return new SearchResponse(sitesList.getSites().size(), new ArrayList<>());
+        List<DataSearchItem> data = getDataList(getRelevantSet(foundIndexes)) ;
+        return new SearchResponse(data.size(), data);
     }
 
 
@@ -84,6 +85,7 @@ public class SearchService implements SearchServiceInter {
         if (lemmas.isEmpty()) return foundIndexes;
         lemmas.sort(Comparator.comparingInt(Lemma::getFrequency));
 
+        String rareLemma = lemmas.get(0).getLemma();
         foundIndexes = repositoryIndex.findByLemma(lemmas.get(0));
         foundIndexes.forEach(temp -> foundPages.add(temp.getPage()));
 
@@ -94,8 +96,10 @@ public class SearchService implements SearchServiceInter {
             List<Index> filteredIndexesOfLemma = new ArrayList<>();
 
             for (Index index : indexesOfLemma) {
-                if (foundPages.contains(index.getPage()))
+                if (foundPages.contains(index.getPage()) ||
+                        index.getLemma().getLemma().equals(rareLemma)) {
                     filteredIndexesOfLemma.add(index);
+                }
             }
             foundPages.clear();
             filteredIndexesOfLemma.forEach(temp -> foundPages.add(temp.getPage()));
@@ -147,12 +151,18 @@ public class SearchService implements SearchServiceInter {
             DataSearchItem item = new DataSearchItem();
             item.setSite(page.getPage().getSite().getUrl());
             item.setSiteName(page.getPage().getSite().getName());
-            item.setUri(LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title"));
-            item.setRelevance(page.getRelevance());
+            item.setUri(page.getPage().getPath());
 
             String title = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title");
+            if (title.length() > 50) {
+                title = title.substring(0,50).concat("...");
+            }
+            item.setTitle(title);
+            item.setRelevance(page.getRelevance());
+
+            String titles = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title");
             String body = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "body");
-            String text = title.concat(body);
+            String text = titles.concat(body);
 
             item.setSnippet(searchSnippets(text, page.getRankWords().keySet()));
 
@@ -164,9 +174,10 @@ public class SearchService implements SearchServiceInter {
 
     private String searchSnippets(String text, Set<String> requiredLemmas) {
 
-
-
-        return " ";
+        return "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" +
+                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" +
+                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" +
+                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
     }
 
 
