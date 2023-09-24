@@ -42,10 +42,6 @@ public class IndexingService implements IndexingServiceInter {
     @Override
     public IndexingResponse startIndexing() {
 
-        //        if (isIndexing()) {
-//            return new IndexingResponse(false, "Индексация уже запущена");
-//        }
-
         repositoryPage.deleteAll();
         repositorySite.deleteAll();
         repositoryLemma.deleteAll();
@@ -67,7 +63,7 @@ public class IndexingService implements IndexingServiceInter {
             }
         }).start();
 
-        return new IndexingResponse(true);
+        return new IndexingResponse();
     }
 
     @Override
@@ -86,14 +82,14 @@ public class IndexingService implements IndexingServiceInter {
             }
         }, 3000, TimeUnit.MILLISECONDS);
 
-        return new IndexingResponse(true);
+        return new IndexingResponse();
     }
 
     @Override
     public synchronized IndexingResponse indexPage(String url) {
 
         if (url.trim().isEmpty()) {
-            return new IndexingResponse(false, "Страница не указана");
+            return new IndexingResponse("Страница не указана");
         }
 
         url = normalUrl(url).trim();
@@ -106,7 +102,7 @@ public class IndexingService implements IndexingServiceInter {
                 .orElse(null);
 
         if (siteCfg == null) {
-            return new IndexingResponse(false, "Данная страница находится за пределами сайтов, " +
+            return new IndexingResponse("Данная страница находится за пределами сайтов, " +
                     "указанных в конфигурационном файле");
         }
 
@@ -138,19 +134,21 @@ public class IndexingService implements IndexingServiceInter {
             Connection connection = LinkParser.getConnection(url);
             int statusCode = LinkParser.getStatusCode(connection);
             if (statusCode >= 400 && statusCode <= 599) {
-                return new IndexingResponse(false, "Код ответа страницы: " + statusCode);
+                return new IndexingResponse("Код ответа страницы: " + statusCode);
             }
 
             String content = LinkParser.getContent(connection);
             Page newPage = new Page(modelSite, path, statusCode, content);
             repositoryPage.save(newPage);
             new LemmaIndexer(modelSite, newPage, repositoryLemma, repositoryIndex).run();
+            modelSite.setStatusTime(new Date());
+            repositorySite.save(modelSite);
 
-            return new IndexingResponse(true);
+            return new IndexingResponse();
 
         } catch (IOException ex) {
             System.out.println(ex + " -- " + url);
-            return new IndexingResponse(false, "Ошибка подключения");
+            return new IndexingResponse("Ошибка подключения");
         }
 
     }

@@ -28,7 +28,7 @@ public record LemmaIndexer(Site modelSite, Page modelPage,
         lemmas.forEach(this::saveLemmaAndIndex);
     }
 
-    private String clearContentFromTag(String content, String tag) {
+    public static String clearContentFromTag(String content, String tag) {
         Document document = Jsoup.parse(content);
         Elements elements = document.select(tag);
         String html = elements.stream().map(Element::html).collect(Collectors.joining());

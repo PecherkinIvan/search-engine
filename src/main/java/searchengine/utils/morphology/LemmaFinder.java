@@ -95,29 +95,4 @@ public class LemmaFinder {
 
 
 
-//    private static boolean isCorrectWordForm(String word) {
-//        List<String>  morphForms = luceneMorphology.getMorphInfo(word);
-//        for (String form : morphForms) {
-//            if (form.matches(WORD_TYPE_REGEX)) {
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-//
-//    public static Set<String> getLemmaSet(String text) {
-//        String[] textArray = arrayContainsRussianWords(text);
-//        Set<String> lemmaSet = new HashSet<>();
-//        for (String word : textArray) {
-//            if (!word.isEmpty() && isCorrectWordForm(word)) {
-//                List<String> wordBaseForms = getMorphInfo(word);
-//                if (anyWordBaseBelongToParticle(wordBaseForms)) {
-//                    continue;
-//                }
-//                lemmaSet.addAll(getNormalForms(word));
-//            }
-//        }
-//        return lemmaSet;
-//    }
-
 }
