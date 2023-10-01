@@ -1,10 +1,6 @@
 package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.SitesList;
@@ -20,11 +16,10 @@ import searchengine.repositories.RepositoryPage;
 import searchengine.repositories.RepositorySite;
 import searchengine.utils.morphology.LemmaFinder;
 import searchengine.utils.morphology.LemmaIndexer;
-import searchengine.utils.parse.LinkParser;
 import searchengine.utils.relevance.RelevancePage;
+import searchengine.utils.snippet.SnippetSearch;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,19 +53,23 @@ public class SearchService implements SearchServiceInter {
         }
         if (foundIndexes.isEmpty()) return new SearchResponse("Ничего не найдено");
 
-        getRelevantSet(foundIndexes).forEach(t -> {
-            System.out.println(t.getPage().getPath() + "  " + t.getRankWords() + t.getRelevance());
-        });
 
-
-        List<DataSearchItem> data = getDataList(getRelevantSet(foundIndexes)) ;
+        List<DataSearchItem> data = getDataList(getRelevantList(foundIndexes)) ;
         return new SearchResponse(data.size(), data);
     }
 
 
     private List<Index> searchByAll(Set<String> words) {
-        List<Lemma> lemmas = repositoryLemma.findByLemmas(words);
-        return getIndexesCorrespondingTolLemmas(lemmas);
+        List<Index> indexList = new ArrayList<>();
+        List<Site> sites = (List<Site>) repositorySite.findAll();
+
+        for (Site site : sites) {
+            if (site.getStatus() == Site.Status.INDEX) {
+                indexList.addAll(searchBySite(words, site));
+            }
+        }
+
+        return indexList;
     }
 
     private List<Index> searchBySite(Set<String> words, Site site) {
@@ -85,10 +84,8 @@ public class SearchService implements SearchServiceInter {
         if (lemmas.isEmpty()) return foundIndexes;
         lemmas.sort(Comparator.comparingInt(Lemma::getFrequency));
 
-        String rareLemma = lemmas.get(0).getLemma();
         foundIndexes = repositoryIndex.findByLemma(lemmas.get(0));
         foundIndexes.forEach(temp -> foundPages.add(temp.getPage()));
-
         if (lemmas.size() == 1) return foundIndexes;
 
         for (Lemma lemma : lemmas.subList(1, lemmas.size())) {
@@ -96,8 +93,7 @@ public class SearchService implements SearchServiceInter {
             List<Index> filteredIndexesOfLemma = new ArrayList<>();
 
             for (Index index : indexesOfLemma) {
-                if (foundPages.contains(index.getPage()) ||
-                        index.getLemma().getLemma().equals(rareLemma)) {
+                if (foundPages.contains(index.getPage())) {
                     filteredIndexesOfLemma.add(index);
                 }
             }
@@ -111,11 +107,10 @@ public class SearchService implements SearchServiceInter {
         return foundIndexes;
     }
 
-    private Set<RelevancePage> getRelevantSet(List<Index> indexes) {
-        Set<RelevancePage> pageSet = new HashSet<>();
+    private List<RelevancePage> getRelevantList(List<Index> indexes) {
+        List<RelevancePage> pageSet = new ArrayList<>();
 
         for (Index index : indexes) {
-
             RelevancePage existingPage = pageSet.stream().filter(temp -> temp.getPage().equals(index.getPage())).findFirst().orElse(null);
             if (existingPage != null) {
                 existingPage.putRankWord(index.getLemma().getLemma(), index.getRank());
@@ -141,10 +136,11 @@ public class SearchService implements SearchServiceInter {
             page.setRelevance(page.getAbsRelevance() / maxRelevance);
         }
 
+        pageSet.sort(Comparator.comparingDouble(RelevancePage::getRelevance).reversed());
         return pageSet;
     }
 
-    private List<DataSearchItem> getDataList(Set<RelevancePage> relevancePages) {
+    private List<DataSearchItem> getDataList(List<RelevancePage> relevancePages) {
         List<DataSearchItem> result = new ArrayList<>();
 
         for (RelevancePage page : relevancePages) {
@@ -163,21 +159,12 @@ public class SearchService implements SearchServiceInter {
             String titles = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title");
             String body = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "body");
             String text = titles.concat(body);
-
-            item.setSnippet(searchSnippets(text, page.getRankWords().keySet()));
+            item.setSnippet( SnippetSearch.find(text, page.getRankWords().keySet()) );
 
             result.add(item);
         }
 
         return result;
-    }
-
-    private String searchSnippets(String text, Set<String> requiredLemmas) {
-
-        return "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" +
-                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" +
-                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" +
-                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
     }
 
 

@@ -76,7 +76,7 @@ public class LemmaFinder {
         return new ArrayList<>();
     }
 
-    private static List<String> getNormalForms(String word) {
+    public static List<String> getNormalForms(String word) {
         if (word.matches("[а-я]+")) {
             return luceneMorphologyRu.getNormalForms(word);
         }
