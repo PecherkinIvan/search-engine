@@ -5,6 +5,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import searchengine.config.UserAgentCfg;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -12,7 +15,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import static java.lang.Thread.sleep;
 
 public class LinkParser {
-    private static ConcurrentSkipListSet<String> links;
 
     public static Connection getConnection(String url) {
         //sleep(150);
@@ -36,7 +38,7 @@ public class LinkParser {
     }
 
     public static ConcurrentSkipListSet<String> getLinks(Connection connection) throws IOException {
-        links = new ConcurrentSkipListSet<>();
+        ConcurrentSkipListSet<String> links = new ConcurrentSkipListSet<>();
         Document document = connection.get();
         Elements elements = document.select("body").select("a");
 

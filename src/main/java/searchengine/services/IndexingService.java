@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,21 +46,21 @@ public class IndexingService implements IndexingServiceInter {
         repositoryLemma.deleteAll();
         repositoryIndex.deleteAll();
 
-        new Thread(() -> {
-            for (searchengine.config.Site site : sitesList.getSites()) {
+        for (searchengine.config.Site site : sitesList.getSites()) {
+            new Thread(() -> {
                 Site modelSite = new Site(Site.Status.INDEXING, new Date(), site.getUrl(), site.getName());
                 repositorySite.save(modelSite);
 
                 new ForkJoinPool().invoke(new SiteIndexer(modelSite, repositoryPage, repositorySite, repositoryLemma, repositoryIndex));
 
-                if (!SiteIndexer.isIndexing()) break;
-
-                modelSite.setStatusTime(new Date());
-                modelSite.setStatus(Site.Status.INDEX);
-                repositorySite.save(modelSite);
-                System.out.println("FINISH");
-            }
-        }).start();
+                if (SiteIndexer.isIndexing()) {
+                    modelSite.setStatusTime(new Date());
+                    modelSite.setStatus(Site.Status.INDEX);
+                    repositorySite.save(modelSite);
+                    System.out.println("FINISH");
+                }
+            }).start();
+        }
 
         return new IndexingResponse();
     }

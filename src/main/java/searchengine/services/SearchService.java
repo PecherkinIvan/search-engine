@@ -58,7 +58,6 @@ public class SearchService implements SearchServiceInter {
         return new SearchResponse(data.size(), data);
     }
 
-
     private List<Index> searchByAll(Set<String> words) {
         List<Index> indexList = new ArrayList<>();
         List<Site> sites = (List<Site>) repositorySite.findAll();

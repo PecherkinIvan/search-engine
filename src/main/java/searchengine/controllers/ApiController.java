@@ -15,12 +15,12 @@ public class ApiController {
 
     private final StatisticsServiceInter statisticsService;
     private final IndexingService indexingService;
-    private final SearchService searchResponse;
+    private final SearchService searchService;
 
-    public ApiController(StatisticsServiceInter statisticsService, IndexingService indexingService, SearchService searchResponse) {
+    public ApiController(StatisticsServiceInter statisticsService, IndexingService indexingService, SearchService searchService) {
         this.statisticsService = statisticsService;
         this.indexingService = indexingService;
-        this.searchResponse = searchResponse;
+        this.searchService = searchService;
     }
 
     @GetMapping("/statistics")
@@ -45,6 +45,6 @@ public class ApiController {
 
     @GetMapping("/search")
     public ResponseEntity<SearchResponse> search(@RequestParam String query, @RequestParam(required = false) String site) {
-        return ResponseEntity.ok(searchResponse.getSearch(query, site));
+        return ResponseEntity.ok(searchService.getSearch(query, site));
     }
 }
