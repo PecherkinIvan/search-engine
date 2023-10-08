@@ -5,9 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import searchengine.config.UserAgentCfg;
+import searchengine.config.UserAgentsCfg;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -16,11 +14,13 @@ import static java.lang.Thread.sleep;
 
 public class LinkParser {
 
-    public static Connection getConnection(String url) {
+    public static Connection getConnection(String url, UserAgentsCfg userAgents) {
         //sleep(150);
         return Jsoup.connect(url)
-                .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
-                .referrer("http://www.google.com")
+//                .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+//                .referrer("http://www.google.com")
+                .userAgent(userAgents.getRandomUser())
+                .referrer(userAgents.getRandomUser())
                 .ignoreHttpErrors(true)
                 //.timeout(15_000)
                 .followRedirects(true);

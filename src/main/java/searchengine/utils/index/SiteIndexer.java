@@ -2,6 +2,7 @@ package searchengine.utils.index;
 
 import org.jsoup.Connection;
 import org.springframework.beans.factory.annotation.Autowired;
+import searchengine.config.UserAgentsCfg;
 import searchengine.model.Page;
 import searchengine.model.Site;
 import searchengine.repositories.RepositoryIndex;
@@ -29,12 +30,13 @@ public class SiteIndexer extends RecursiveAction {
     private static RepositoryLemma repositoryLemma;
     @Autowired
     private static RepositoryIndex repositoryIndex;
+    private static UserAgentsCfg userAgents;
     private static boolean isIndexing = true;
 
 
 
     public SiteIndexer(Site site, RepositoryPage repositoryPage, RepositorySite repositorySite,
-                       RepositoryLemma repositoryLemma, RepositoryIndex repositoryIndex) {
+                       RepositoryLemma repositoryLemma, RepositoryIndex repositoryIndex, UserAgentsCfg userAgents) {
         modelSite = site;
         url = site.getUrl().replace("www.", "");
         url = !url.endsWith("/") ? (url + '/') : url;
@@ -42,6 +44,7 @@ public class SiteIndexer extends RecursiveAction {
         SiteIndexer.repositorySite = repositorySite;
         SiteIndexer.repositoryLemma = repositoryLemma;
         SiteIndexer.repositoryIndex = repositoryIndex;
+        SiteIndexer.userAgents = userAgents;
         fullUrls = ConcurrentHashMap.newKeySet();
         fullUrls.add(url);
         isIndexing = true;
@@ -58,7 +61,7 @@ public class SiteIndexer extends RecursiveAction {
 
         CopyOnWriteArrayList<SiteIndexer> taskList = new CopyOnWriteArrayList<>();
         ConcurrentSkipListSet<String> links = new ConcurrentSkipListSet<>();
-        Connection connection = LinkParser.getConnection(url);
+        Connection connection = LinkParser.getConnection(url, userAgents);
         int statusCode = 0;
         String content = "";
 

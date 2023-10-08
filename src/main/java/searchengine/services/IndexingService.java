@@ -6,6 +6,7 @@ import org.jsoup.Connection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.SitesList;
+import searchengine.config.UserAgentsCfg;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.model.Index;
 import searchengine.model.Lemma;
@@ -19,16 +20,14 @@ import searchengine.utils.parse.LinkParser;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
 public class IndexingService implements IndexingServiceInter {
 
     private final SitesList sitesList;
+    private final UserAgentsCfg agentCfg;
     @Autowired
     private RepositorySite repositorySite;
     @Autowired
@@ -40,7 +39,6 @@ public class IndexingService implements IndexingServiceInter {
 
     @Override
     public IndexingResponse startIndexing() {
-
         repositoryPage.deleteAll();
         repositorySite.deleteAll();
         repositoryLemma.deleteAll();
@@ -51,7 +49,8 @@ public class IndexingService implements IndexingServiceInter {
                 Site modelSite = new Site(Site.Status.INDEXING, new Date(), site.getUrl(), site.getName());
                 repositorySite.save(modelSite);
 
-                new ForkJoinPool().invoke(new SiteIndexer(modelSite, repositoryPage, repositorySite, repositoryLemma, repositoryIndex));
+                new ForkJoinPool().invoke(new SiteIndexer(modelSite, repositoryPage, repositorySite,
+                                            repositoryLemma, repositoryIndex, agentCfg));
 
                 if (SiteIndexer.isIndexing()) {
                     modelSite.setStatusTime(new Date());
@@ -130,7 +129,7 @@ public class IndexingService implements IndexingServiceInter {
         }
 
         try {
-            Connection connection = LinkParser.getConnection(url);
+            Connection connection = LinkParser.getConnection(url, agentCfg);
             int statusCode = LinkParser.getStatusCode(connection);
             if (statusCode >= 400 && statusCode <= 599) {
                 return new IndexingResponse("Код ответа страницы: " + statusCode);
@@ -152,6 +151,10 @@ public class IndexingService implements IndexingServiceInter {
 
     }
 
+    private String normalUrl(String url) {
+        return url.replace("www.", "");
+    }
+
     private boolean isIndexing() {
         List<Site> all = (List<Site>) repositorySite.findAll();
         for (Site entitySite : all) {
@@ -160,14 +163,6 @@ public class IndexingService implements IndexingServiceInter {
             }
         }
         return false;
-    }
-
-    private String normalUrl(String url) {
-        return url.replace("www.", "");
-    }
-
-    private boolean isUrlSiteContains(String url) {
-        return sitesList.getSites().stream().anyMatch(site -> site.getUrl().equals(url));
     }
 }
 

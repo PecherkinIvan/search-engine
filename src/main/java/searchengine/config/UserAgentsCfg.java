@@ -1,7 +1,5 @@
 package searchengine.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -10,8 +8,9 @@ import java.util.Random;
 
 @Component
 @ConfigurationProperties(prefix = "user-agent-settings")
-public class UserAgentCfg {
+public class UserAgentsCfg {
     private List<String> users;
+    private String referrer;
     private final Random random = new Random();
 
     public String getRandomUser() {
@@ -20,5 +19,13 @@ public class UserAgentCfg {
 
     public void setUsers(List<String> users) {
         this.users = users;
+    }
+
+    public void setReferrer(String referrer) {
+        this.referrer = referrer;
+    }
+
+    public String getReferrer() {
+        return referrer;
     }
 }
