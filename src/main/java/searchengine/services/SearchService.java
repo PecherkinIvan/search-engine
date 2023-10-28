@@ -3,7 +3,6 @@ package searchengine.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import searchengine.config.SitesList;
 import searchengine.dto.search.DataSearchItem;
 import searchengine.dto.search.SearchResponse;
 import searchengine.model.Index;
@@ -19,7 +18,6 @@ import searchengine.utils.morphology.LemmaIndexer;
 import searchengine.utils.relevance.RelevancePage;
 import searchengine.utils.snippet.SnippetSearch;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import java.util.*;
 
 @Service
@@ -64,7 +62,7 @@ public class SearchService implements SearchServiceInter {
         }
         else {
             Site site = repositorySite.findEntitySiteByUrl(siteUrl);
-            if (site.getStatus() != Site.Status.INDEX)  return new SearchResponse("Выбранный сайт ещё не проиндексирован");
+            if (site.getStatus() != Site.Status.INDEXED)  return new SearchResponse("Выбранный сайт ещё не проиндексирован");
             foundIndexes = searchBySite(queryLemmas, site);
         }
         if (foundIndexes.isEmpty()) return new SearchResponse("Ничего не найдено");

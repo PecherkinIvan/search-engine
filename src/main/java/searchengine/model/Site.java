@@ -2,7 +2,6 @@ package searchengine.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.context.annotation.DependsOn;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -41,6 +40,6 @@ public class Site {
     }
 
     public enum Status {
-        INDEXING, INDEX, FAILED
+        INDEXING, INDEXED, FAILED
     }
 }

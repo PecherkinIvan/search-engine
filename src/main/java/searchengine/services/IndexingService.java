@@ -59,9 +59,8 @@ public class IndexingService implements IndexingServiceInter {
 
                 if (SiteIndexer.isIndexing()) {
                     modelSite.setStatusTime(new Date());
-                    modelSite.setStatus(Site.Status.INDEX);
+                    modelSite.setStatus(Site.Status.INDEXED);
                     repositorySite.save(modelSite);
-                    System.out.println("FINISH");
                 }
             }).start();
         }
@@ -77,7 +76,6 @@ public class IndexingService implements IndexingServiceInter {
         }
 
         SiteIndexer.stopIndexing();
-        System.out.println("STOP");
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.schedule(() -> {
             List<Site> all = (List<Site>) repositorySite.findAll();
@@ -157,7 +155,7 @@ public class IndexingService implements IndexingServiceInter {
             Page newPage = new Page(modelSite, path, statusCode, content);
             repositoryPage.save(newPage);
             new LemmaIndexer(modelSite, newPage, repositoryLemma, repositoryIndex).run();
-            modelSite.setStatus(Site.Status.INDEX);
+            modelSite.setStatus(Site.Status.INDEXED);
             modelSite.setStatusTime(new Date());
             repositorySite.save(modelSite);
 
