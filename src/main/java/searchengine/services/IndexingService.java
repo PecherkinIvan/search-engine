@@ -39,6 +39,11 @@ public class IndexingService implements IndexingServiceInter {
 
     @Override
     public IndexingResponse startIndexing() {
+
+//        if (isIndexing()) {
+//            return new IndexingResponse("Индексация уже запущена");
+//        }
+
         repositoryPage.deleteAll();
         repositorySite.deleteAll();
         repositoryLemma.deleteAll();
@@ -66,6 +71,11 @@ public class IndexingService implements IndexingServiceInter {
 
     @Override
     public IndexingResponse stopIndexing() {
+
+        if (!isIndexing()) {
+            return new IndexingResponse("Индексация не запущена");
+        }
+
         SiteIndexer.stopIndexing();
         System.out.println("STOP");
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -89,21 +99,13 @@ public class IndexingService implements IndexingServiceInter {
         if (url.trim().isEmpty()) {
             return new IndexingResponse("Страница не указана");
         }
-
         url = normalUrl(url).trim();
-        String finalUrl = url;
-        searchengine.config.Site siteCfg;
 
-        siteCfg = sitesList.getSites().stream()
-                .filter(site -> finalUrl.contains( normalUrl(site.getUrl())) )
-                .findFirst()
-                .orElse(null);
-
+        searchengine.config.Site siteCfg = findSiteCfgByUrl(url);
         if (siteCfg == null) {
             return new IndexingResponse("Данная страница находится за пределами сайтов, " +
                     "указанных в конфигурационном файле");
         }
-
 
         Site modelSite = repositorySite.findEntitySiteByUrl(siteCfg.getUrl());
         if (modelSite == null) {
@@ -113,42 +115,9 @@ public class IndexingService implements IndexingServiceInter {
 
         String path = url.substring(normalUrl(modelSite.getUrl()).length());
         path = path.equals("") ? "/" : path;
+        deletePage(path);
 
-        Page oldPage = repositoryPage.findEntityPageByPath(path);
-        if (oldPage != null) {
-            List<Index> entities = repositoryIndex.findByPageIn(oldPage);
-            entities.forEach(entity -> {
-                System.out.println(entity.getPage());
-                Lemma lemma = entity.getLemma();
-                lemma.setFrequency(lemma.getFrequency() - 1);
-                repositoryLemma.save(lemma);
-            });
-
-            repositoryIndex.deleteAll(entities);
-            repositoryPage.delete(oldPage);
-        }
-
-        try {
-            Connection connection = LinkParser.getConnection(url, agentCfg);
-            int statusCode = LinkParser.getStatusCode(connection);
-            if (statusCode >= 400 && statusCode <= 599) {
-                return new IndexingResponse("Код ответа страницы: " + statusCode);
-            }
-
-            String content = LinkParser.getContent(connection);
-            Page newPage = new Page(modelSite, path, statusCode, content);
-            repositoryPage.save(newPage);
-            new LemmaIndexer(modelSite, newPage, repositoryLemma, repositoryIndex).run();
-            modelSite.setStatusTime(new Date());
-            repositorySite.save(modelSite);
-
-            return new IndexingResponse();
-
-        } catch (IOException ex) {
-            System.out.println(ex + " -- " + url);
-            return new IndexingResponse("Ошибка подключения");
-        }
-
+        return indexAndSavePage(url, modelSite, path);
     }
 
     private String normalUrl(String url) {
@@ -163,6 +132,60 @@ public class IndexingService implements IndexingServiceInter {
             }
         }
         return false;
+    }
+
+    private searchengine.config.Site findSiteCfgByUrl(String finalUrl) {
+        searchengine.config.Site siteCfg;
+
+        siteCfg = sitesList.getSites().stream()
+                .filter(site -> finalUrl.contains( normalUrl(site.getUrl())) )
+                .findFirst()
+                .orElse(null);
+
+        return siteCfg;
+    }
+
+    private IndexingResponse indexAndSavePage(String url, Site modelSite, String path) {
+        try {
+            Connection connection = LinkParser.getConnection(url, agentCfg);
+            int statusCode = LinkParser.getStatusCode(connection);
+            if (statusCode >= 400 && statusCode <= 599) {
+                return new IndexingResponse("Код ответа страницы: " + statusCode);
+            }
+
+            String content = LinkParser.getContent(connection);
+            Page newPage = new Page(modelSite, path, statusCode, content);
+            repositoryPage.save(newPage);
+            new LemmaIndexer(modelSite, newPage, repositoryLemma, repositoryIndex).run();
+            modelSite.setStatus(Site.Status.INDEX);
+            modelSite.setStatusTime(new Date());
+            repositorySite.save(modelSite);
+
+            return new IndexingResponse();
+
+        } catch (IOException ex) {
+            System.out.println(ex + " -- " + url);
+            modelSite.setStatus(Site.Status.FAILED);
+            modelSite.setLastError("Ошибка подключения: страница " + modelSite.getUrl() + path);
+            modelSite.setStatusTime(new Date());
+            repositorySite.save(modelSite);
+            return new IndexingResponse("Ошибка подключения");
+        }
+    }
+
+    private void deletePage(String path) {
+        Page oldPage = repositoryPage.findEntityPageByPath(path);
+        if (oldPage != null) {
+            List<Index> entities = repositoryIndex.findByPageIn(oldPage);
+            entities.forEach(entity -> {
+                Lemma lemma = entity.getLemma();
+                lemma.setFrequency(lemma.getFrequency() - 1);
+                repositoryLemma.save(lemma);
+            });
+
+            repositoryIndex.deleteAll(entities);
+            repositoryPage.delete(oldPage);
+        }
     }
 }
 

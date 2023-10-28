@@ -20,8 +20,8 @@ import java.util.concurrent.*;
 public class SiteIndexer extends RecursiveAction {
 
     private String url;
-    private static Site modelSite;
-    private static Set<String> fullUrls;
+    private final Site modelSite;
+    private final Set<String> fullUrls;
     @Autowired
     private static RepositoryPage repositoryPage;
     @Autowired
@@ -50,8 +50,10 @@ public class SiteIndexer extends RecursiveAction {
         isIndexing = true;
     }
 
-    private SiteIndexer(String url) {
+    private SiteIndexer(String url, Site modelSite, Set<String> fullUrls) {
         this.url = url;
+        this.modelSite = modelSite;
+        this.fullUrls = fullUrls;
     }
 
     @Override
@@ -87,14 +89,13 @@ public class SiteIndexer extends RecursiveAction {
         for (String link : links) {
             if (!isIndexing) return;
             if (link.contains(url) && !fullUrls.contains(link)) {
-                SiteIndexer task = new SiteIndexer(link);
+                SiteIndexer task = new SiteIndexer(link, modelSite, fullUrls);
                 fullUrls.add(link);
                 task.fork();
                 taskList.add(task);
             }
         }
         taskList.forEach(ForkJoinTask::join);
-
     }
 
     public static void stopIndexing() {

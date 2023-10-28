@@ -72,7 +72,6 @@ public class LemmaFinder {
         else if (word.matches("[a-z]+")) {
             return luceneMorphologyEn.getNormalForms(word);
         }
-        System.out.println(word);
         return new ArrayList<>();
     }
 

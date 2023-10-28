@@ -19,13 +19,13 @@ import searchengine.utils.morphology.LemmaIndexer;
 import searchengine.utils.relevance.RelevancePage;
 import searchengine.utils.snippet.SnippetSearch;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class SearchService implements SearchServiceInter {
 
-    private final SitesList sitesList;
     @Autowired
     private RepositorySite repositorySite;
     @Autowired
@@ -35,10 +35,26 @@ public class SearchService implements SearchServiceInter {
     @Autowired
     private RepositoryIndex repositoryIndex;
 
-    @Override
-    public SearchResponse getSearch(String query, String siteUrl) {
+    private static String lastQuery;
+    private static List<DataSearchItem> data;
 
-        if (query.isEmpty()) return new SearchResponse("Запрос не введен");
+
+    @Override
+    public SearchResponse getSearch(String query, String siteUrl, Integer offset, Integer limit) {
+
+        if (query.isEmpty()) {
+            return new SearchResponse("Запрос не введен");
+        }
+
+        offset = (offset == null) ? 0 : offset;
+        limit = (limit == null) ? 20 : limit;
+
+        if (query.equals(lastQuery)) {
+            if (offset + limit >= data.size()) {
+                limit = data.size() - offset;
+            }
+            return  new SearchResponse(data.size(), data.subList(offset, offset + limit ));
+        }
 
         Set<String> queryLemmas = LemmaFinder.collectLemmas(query).keySet();
         List<Index> foundIndexes;
@@ -53,9 +69,14 @@ public class SearchService implements SearchServiceInter {
         }
         if (foundIndexes.isEmpty()) return new SearchResponse("Ничего не найдено");
 
+        lastQuery = query;
+        data = getDataList(getRelevantList(foundIndexes));
 
-        List<DataSearchItem> data = getDataList(getRelevantList(foundIndexes)) ;
-        return new SearchResponse(data.size(), data);
+        if (offset + limit >= data.size()) {
+            limit = data.size() - offset;
+        }
+
+        return new SearchResponse(data.size(), data.subList(offset, offset + limit));
     }
 
     private List<Index> searchByAll(Set<String> words) {
@@ -63,7 +84,7 @@ public class SearchService implements SearchServiceInter {
         List<Site> sites = (List<Site>) repositorySite.findAll();
 
         for (Site site : sites) {
-            if (site.getStatus() == Site.Status.INDEX) {
+            if (site.getStatus() != Site.Status.INDEXING) { // ???
                 indexList.addAll(searchBySite(words, site));
             }
         }
