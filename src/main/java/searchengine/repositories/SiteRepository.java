@@ -6,11 +6,10 @@ import org.springframework.stereotype.Repository;
 import searchengine.model.Site;
 
 @Repository
-public interface RepositorySite extends CrudRepository<Site, Long> {
+public interface SiteRepository extends CrudRepository<Site, Long> {
 
     Site findEntitySiteByUrl(String url);
 
     @Query("select e.status from Site as e where e.url =:url")
     Site.Status findStatusByUrl(String url);
-
 }

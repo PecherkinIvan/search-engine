@@ -7,7 +7,7 @@ import searchengine.model.Page;
 import searchengine.model.Site;
 
 @Repository
-public interface RepositoryPage extends CrudRepository<Page, Long> {
+public interface PageRepository extends CrudRepository<Page, Long> {
     Page findEntityPageByPath(String path);
 
     @Query("SELECT COUNT(*) FROM Page GROUP BY site HAVING site =:modelSite")

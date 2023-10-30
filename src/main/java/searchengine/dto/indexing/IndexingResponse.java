@@ -1,6 +1,5 @@
 package searchengine.dto.indexing;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data

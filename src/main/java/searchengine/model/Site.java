@@ -16,7 +16,6 @@ public class Site {
     private int id;
 
     @Enumerated(EnumType.STRING)
-    //@Column(columnDefinition = "ENUM", nullable = false)
     private Status status;
 
     @Column(name = "status_time", columnDefinition = "DATETIME", nullable = false)

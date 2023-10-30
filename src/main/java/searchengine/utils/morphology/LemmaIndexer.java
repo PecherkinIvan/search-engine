@@ -1,6 +1,5 @@
 package searchengine.utils.morphology;
 
-import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,14 +8,14 @@ import searchengine.model.Index;
 import searchengine.model.Lemma;
 import searchengine.model.Page;
 import searchengine.model.Site;
-import searchengine.repositories.RepositoryIndex;
-import searchengine.repositories.RepositoryLemma;
+import searchengine.repositories.IndexRepository;
+import searchengine.repositories.LemmaRepository;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public record LemmaIndexer(Site modelSite, Page modelPage,
-                           RepositoryLemma repositoryLemma, RepositoryIndex repositoryIndex) {
+                           LemmaRepository repositoryLemma, IndexRepository repositoryIndex) {
 
     public void run() {
         String content = modelPage.getContent();

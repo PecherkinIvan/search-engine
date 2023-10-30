@@ -10,7 +10,7 @@ import searchengine.model.Page;
 import java.util.List;
 
 @Repository
-public interface RepositoryIndex extends CrudRepository<Index, Long> {
+public interface IndexRepository extends CrudRepository<Index, Long> {
 
     @Query("SELECT e FROM Index AS e WHERE e.page =:page")
     List<Index> findByPageIn(Page page);

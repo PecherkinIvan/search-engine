@@ -5,10 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import searchengine.config.UserAgentsCfg;
 import searchengine.model.Page;
 import searchengine.model.Site;
-import searchengine.repositories.RepositoryIndex;
-import searchengine.repositories.RepositoryLemma;
-import searchengine.repositories.RepositoryPage;
-import searchengine.repositories.RepositorySite;
+import searchengine.repositories.IndexRepository;
+import searchengine.repositories.LemmaRepository;
+import searchengine.repositories.PageRepository;
+import searchengine.repositories.SiteRepository;
 import searchengine.utils.morphology.LemmaIndexer;
 import searchengine.utils.parse.LinkParser;
 
@@ -23,20 +23,20 @@ public class SiteIndexer extends RecursiveAction {
     private final Site modelSite;
     private final Set<String> fullUrls;
     @Autowired
-    private static RepositoryPage repositoryPage;
+    private static PageRepository repositoryPage;
     @Autowired
-    private static RepositorySite repositorySite;
+    private static SiteRepository repositorySite;
     @Autowired
-    private static RepositoryLemma repositoryLemma;
+    private static LemmaRepository repositoryLemma;
     @Autowired
-    private static RepositoryIndex repositoryIndex;
+    private static IndexRepository repositoryIndex;
     private static UserAgentsCfg userAgents;
     private static boolean isIndexing = true;
 
 
 
-    public SiteIndexer(Site site, RepositoryPage repositoryPage, RepositorySite repositorySite,
-                       RepositoryLemma repositoryLemma, RepositoryIndex repositoryIndex, UserAgentsCfg userAgents) {
+    public SiteIndexer(Site site, PageRepository repositoryPage, SiteRepository repositorySite,
+                       LemmaRepository repositoryLemma, IndexRepository repositoryIndex, UserAgentsCfg userAgents) {
         modelSite = site;
         url = site.getUrl().replace("www.", "");
         url = !url.endsWith("/") ? (url + '/') : url;

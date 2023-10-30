@@ -17,8 +17,6 @@ public class LinkParser {
     public static Connection getConnection(String url, UserAgentsCfg userAgents) {
         //sleep(150);
         return Jsoup.connect(url)
-//                .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
-//                .referrer("http://www.google.com")
                 .userAgent(userAgents.getRandomUser())
                 .referrer(userAgents.getRandomUser())
                 .ignoreHttpErrors(true)
@@ -53,9 +51,9 @@ public class LinkParser {
     }
 
     private static boolean isLink(String link) {
-        //String regex = "https://" + "[^#,\\s]*";
-        String regex = "^(https?|ftp)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        String regex = "^(https?|ftp)://[-\\w+&@#/%?=~_|!:,.;]*[-\\w+&@#/%=~_|]";
         return link.matches(regex);
+
     }
 
     private static boolean isFile(String link) {

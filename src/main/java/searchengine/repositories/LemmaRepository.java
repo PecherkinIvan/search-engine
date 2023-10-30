@@ -10,13 +10,10 @@ import java.util.List;
 import java.util.Set;
 
 @Repository
-public interface RepositoryLemma extends CrudRepository<Lemma, Long> {
+public interface LemmaRepository extends CrudRepository<Lemma, Long> {
     Lemma findByLemmaAndSite(String lemma, Site site);
 
     Integer countBySite(Site site);
-
-    @Query("SELECT l FROM Lemma AS l WHERE l.frequency < 300 AND l.lemma IN (:lemmas)")
-    List<Lemma> findByLemmas(Set<String> lemmas);
 
     @Query("SELECT l FROM Lemma AS l WHERE l.frequency < 300 " +
             "AND l.lemma IN (:lemmas) AND l.site =:site")

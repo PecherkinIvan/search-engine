@@ -1,8 +1,6 @@
 package searchengine.utils.relevance;
 
-import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import searchengine.model.Page;
 
 import java.util.HashMap;

@@ -5,19 +5,17 @@ import org.springframework.web.bind.annotation.*;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.dto.search.SearchResponse;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.services.IndexingService;
-import searchengine.services.SearchService;
-import searchengine.services.StatisticsServiceInter;
+import searchengine.services.*;
 
 @RestController
 @RequestMapping("/api")
 public class ApiController {
 
-    private final StatisticsServiceInter statisticsService;
+    private final StatisticsService statisticsService;
     private final IndexingService indexingService;
     private final SearchService searchService;
 
-    public ApiController(StatisticsServiceInter statisticsService, IndexingService indexingService, SearchService searchService) {
+    public ApiController(StatisticsService statisticsService, IndexingServiceImpl indexingService, SearchServiceImpl searchService) {
         this.statisticsService = statisticsService;
         this.indexingService = indexingService;
         this.searchService = searchService;
