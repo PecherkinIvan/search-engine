@@ -1,4 +1,4 @@
-![image](https://github.com/PecherkinIvan/search-engine/assets/73274788/dae509db-4e29-4691-8c62-c33deb140298)![image](https://github.com/PecherkinIvan/search-engine/assets/73274788/57373a0d-8223-4127-8821-a1d7e66924a7)# Search Engine
+# Search Engine
 ### Это мой выпускной проект курса JAVA developer от SkillBox
 
 ### Описание проекта
@@ -98,10 +98,10 @@ SpringBoot приложение. Поисковой движок, позваля
 3. Запустить MySQL80, и создать схему с именем "search_engine"
 4. Создайте или измените файл application.yml/yaml в папке SearchEngin/config
 5. Заполнить в этом файле данные для подключения к БД
-6. Можно изменить сайты для индексации (indexing-settings.sites:) по образцу в документе
-7. Открыть терминал и перейти в папку SearchEngin
-8. Командой java -jar SearchEngin.jar запустить программу.
-9. Зайти в браузер, в поисковике ввести http://localhost:8080/
+7. Можно изменить сайты для индексации (indexing-settings.sites:) по образцу в документе
+8. Открыть терминал и перейти в папку SearchEngin
+9. Командой java -jar SearchEngin.jar запустить программу.
+10. Зайти в браузер, в поисковике ввести http://localhost:8080/
 
 ### Работа с веб-интерфейсом
 Веб-интерфейс представляет собой одну веб-страницу с тремя вкладками:
