@@ -42,9 +42,9 @@ public class IndexingServiceImpl implements IndexingService {
     @Override
     public IndexingResponse startIndexing() {
 
-//        if (isIndexing()) {
-//            return new IndexingResponse("Индексация уже запущена");
-//        }
+        if (isIndexing()) {
+            return new IndexingResponse("Индексация уже запущена");
+        }
 
         System.out.println("** START INDEXING ** " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
 
