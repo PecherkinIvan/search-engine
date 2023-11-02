@@ -79,6 +79,11 @@ public class SiteIndexer extends RecursiveAction {
         System.out.println(Thread.currentThread().getName() + "  -- " + url);
         Page pageNew = new Page(modelSite, getPath(url), statusCode, content);
         repositoryPage.save(pageNew);
+
+        if (!isIndexing) {
+            modelSite.setStatus(Site.Status.FAILED);
+            modelSite.setLastError("Индексация остановлена пользователем");
+        }
         modelSite.setStatusTime(new Date());
         repositorySite.save(modelSite);
 

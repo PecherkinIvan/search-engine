@@ -19,6 +19,7 @@ import searchengine.utils.relevance.RelevancePage;
 import searchengine.utils.snippet.SnippetSearch;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +74,7 @@ public class SearchServiceImpl implements SearchService {
         List<Site> sites = (List<Site>) repositorySite.findAll();
 
         for (Site site : sites) {
-            if (site.getStatus() != Site.Status.INDEXING) { // ???
+            if (site.getStatus() != Site.Status.INDEXING) {
                 indexList.addAll(searchBySite(words, site));
             }
         }
@@ -83,7 +84,12 @@ public class SearchServiceImpl implements SearchService {
 
     private List<Index> searchBySite(Set<String> words, Site site) {
         List<Lemma> lemmas = repositoryLemma.selectLemmasBySite(words, site);
-        return getIndexesCorrespondingTolLemmas(lemmas);
+        return lemmas.stream()
+                .map(Lemma::getLemma)
+                .collect(Collectors.toSet())
+                .equals(words)
+                ? getIndexesCorrespondingTolLemmas(lemmas)
+                : new ArrayList<>();
     }
 
     private List<Index> getIndexesCorrespondingTolLemmas(List<Lemma> lemmas) {

@@ -18,6 +18,8 @@ import searchengine.utils.morphology.LemmaIndexer;
 import searchengine.utils.parse.LinkParser;
 
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
@@ -40,9 +42,11 @@ public class IndexingServiceImpl implements IndexingService {
     @Override
     public IndexingResponse startIndexing() {
 
-        if (isIndexing()) {
-            return new IndexingResponse("Индексация уже запущена");
-        }
+//        if (isIndexing()) {
+//            return new IndexingResponse("Индексация уже запущена");
+//        }
+
+        System.out.println("** START INDEXING ** " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
 
         repositoryIndex.deleteAll();
         repositoryLemma.deleteAll();
@@ -58,7 +62,9 @@ public class IndexingServiceImpl implements IndexingService {
                 new ForkJoinPool().invoke(new SiteIndexer(modelSite, repositoryPage, repositorySite,
                                             repositoryLemma, repositoryIndex, agentCfg));
 
+
                 if (SiteIndexer.isIndexing()) {
+                    System.out.println("** SITE " + site.getUrl() + " IS INDEXED ** " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
                     modelSite.setStatusTime(new Date());
                     modelSite.setStatus(Site.Status.INDEXED);
                     repositorySite.save(modelSite);
@@ -77,6 +83,8 @@ public class IndexingServiceImpl implements IndexingService {
             return new IndexingResponse("Индексация не запущена");
         }
 
+        System.out.println("** STOP INDEXING ** " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
+
         SiteIndexer.stopIndexing();
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.schedule(() -> {
@@ -84,6 +92,7 @@ public class IndexingServiceImpl implements IndexingService {
             for (Site site : all) {
                 if (site.getStatus() == Site.Status.INDEXING) {
                     site.setStatus(Site.Status.FAILED);
+                    site.setStatusTime(new Date());
                     site.setLastError("Индексация остановлена пользователем");
                     repositorySite.save(site);
                 }
@@ -160,7 +169,9 @@ public class IndexingServiceImpl implements IndexingService {
             Page newPage = new Page(modelSite, path, statusCode, content);
             repositoryPage.save(newPage);
             new LemmaIndexer(modelSite, newPage, repositoryLemma, repositoryIndex).run();
+            System.out.println("** PAGE " + url + " IS INDEXED ** " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
             modelSite.setStatus(Site.Status.INDEXED);
+            modelSite.setLastError("");
             modelSite.setStatusTime(new Date());
             repositorySite.save(modelSite);
 
