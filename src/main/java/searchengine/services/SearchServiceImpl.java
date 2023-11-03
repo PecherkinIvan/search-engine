@@ -64,7 +64,7 @@ public class SearchServiceImpl implements SearchService {
         if (foundIndexes.isEmpty()) return new SearchResponse("Ничего не найдено");
 
         lastQuery = query;
-        data = getDataList(getRelevantList(foundIndexes));
+        data = getDataList(foundIndexes);
 
         return buildResponse(offset, limit);
     }
@@ -122,6 +122,34 @@ public class SearchServiceImpl implements SearchService {
         return foundIndexes;
     }
 
+    private List<DataSearchItem> getDataList(List<Index> indexes) {
+        List<RelevancePage> relevancePages = getRelevantList(indexes);
+        List<DataSearchItem> result = new ArrayList<>();
+
+        for (RelevancePage page : relevancePages) {
+            DataSearchItem item = new DataSearchItem();
+            item.setSite(page.getPage().getSite().getUrl());
+            item.setSiteName(page.getPage().getSite().getName());
+            item.setUri(page.getPage().getPath());
+
+            String title = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title");
+            if (title.length() > 50) {
+                title = title.substring(0,50).concat("...");
+            }
+            item.setTitle(title);
+            item.setRelevance(page.getRelevance());
+
+            String titles = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title");
+            String body = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "body");
+            String text = titles.concat(body);
+            item.setSnippet( SnippetSearch.find(text, page.getRankWords().keySet()) );
+
+            result.add(item);
+        }
+
+        return result;
+    }
+
     private List<RelevancePage> getRelevantList(List<Index> indexes) {
         List<RelevancePage> pageSet = new ArrayList<>();
 
@@ -153,33 +181,6 @@ public class SearchServiceImpl implements SearchService {
 
         pageSet.sort(Comparator.comparingDouble(RelevancePage::getRelevance).reversed());
         return pageSet;
-    }
-
-    private List<DataSearchItem> getDataList(List<RelevancePage> relevancePages) {
-        List<DataSearchItem> result = new ArrayList<>();
-
-        for (RelevancePage page : relevancePages) {
-            DataSearchItem item = new DataSearchItem();
-            item.setSite(page.getPage().getSite().getUrl());
-            item.setSiteName(page.getPage().getSite().getName());
-            item.setUri(page.getPage().getPath());
-
-            String title = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title");
-            if (title.length() > 50) {
-                title = title.substring(0,50).concat("...");
-            }
-            item.setTitle(title);
-            item.setRelevance(page.getRelevance());
-
-            String titles = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "title");
-            String body = LemmaIndexer.clearContentFromTag(page.getPage().getContent(), "body");
-            String text = titles.concat(body);
-            item.setSnippet( SnippetSearch.find(text, page.getRankWords().keySet()) );
-
-            result.add(item);
-        }
-
-        return result;
     }
 
     private SearchResponse buildResponse(Integer offset, Integer limit) {
