@@ -40,7 +40,7 @@ public class StatisticsServiceImpl implements StatisticsService {
            DetailedStatisticsItem item = new DetailedStatisticsItem();
            item.setName(site.getName());
            item.setUrl(site.getUrl());
-           searchengine.model.Site modelSite = repositorySite.findEntitySiteByUrl(site.getUrl());
+           searchengine.model.Site modelSite = repositorySite.findSiteByUrl(site.getUrl());
            Integer pagesCount = repositoryPage.countBySite(modelSite);
            pagesCount = pagesCount == null ? 0 : pagesCount;
            item.setPages(pagesCount);

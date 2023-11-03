@@ -57,7 +57,7 @@ public class SearchServiceImpl implements SearchService {
             foundIndexes = searchByAll(queryLemmas);
         }
         else {
-            Site site = repositorySite.findEntitySiteByUrl(siteUrl);
+            Site site = repositorySite.findSiteByUrl(siteUrl);
             if (site.getStatus() != Site.Status.INDEXED)  return new SearchResponse("Выбранный сайт ещё не проиндексирован");
             foundIndexes = searchBySite(queryLemmas, site);
         }

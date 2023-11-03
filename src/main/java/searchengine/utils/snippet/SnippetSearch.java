@@ -72,8 +72,6 @@ public class SnippetSearch {
             i++;
         }
 
-        remainderLength -= i;
-
         if (tempStart != 0 && text.charAt(tempStart - 1) != ' ') {
             for (int k = tempStart + 1; k < text.length() - 1; k++) {
                 if (Character.isLetter(text.charAt(k)) && text.charAt(tempStart) == ' ') {

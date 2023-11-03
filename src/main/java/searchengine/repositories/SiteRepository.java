@@ -8,7 +8,7 @@ import searchengine.model.Site;
 @Repository
 public interface SiteRepository extends CrudRepository<Site, Long> {
 
-    Site findEntitySiteByUrl(String url);
+    Site findSiteByUrl(String url);
 
     @Query("select e.status from Site as e where e.url =:url")
     Site.Status findStatusByUrl(String url);

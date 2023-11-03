@@ -60,7 +60,7 @@ public class IndexingServiceImpl implements IndexingService {
                 repositorySite.save(modelSite);
 
                 new ForkJoinPool().invoke(new SiteIndexer(modelSite, repositoryPage, repositorySite,
-                                            repositoryLemma, repositoryIndex, agentCfg));
+                        repositoryLemma, repositoryIndex, agentCfg));
 
 
                 if (SiteIndexer.isIndexing()) {
@@ -116,7 +116,7 @@ public class IndexingServiceImpl implements IndexingService {
                     "указанных в конфигурационном файле");
         }
 
-        Site modelSite = repositorySite.findEntitySiteByUrl(siteCfg.getUrl());
+        Site modelSite = repositorySite.findSiteByUrl(siteCfg.getUrl());
         if (modelSite == null) {
             modelSite = new Site(Site.Status.INDEXING, new Date(), siteCfg.getUrl(), siteCfg.getName());
             repositorySite.save(modelSite);
@@ -124,9 +124,9 @@ public class IndexingServiceImpl implements IndexingService {
 
         String path = url.substring(normalUrl(modelSite.getUrl()).length());
         path = path.equals("") ? "/" : path;
-        deletePage(path);
+        deletePage(path, modelSite);
 
-        return indexAndSavePage(url, modelSite, path);
+        return indexingAndSavePage(url, modelSite, path);
     }
 
     private String normalUrl(String url) {
@@ -150,14 +150,14 @@ public class IndexingServiceImpl implements IndexingService {
         searchengine.config.Site siteCfg;
 
         siteCfg = sitesList.getSites().stream()
-                .filter(site -> finalUrl.contains( normalUrl(site.getUrl())) )
+                .filter(site -> finalUrl.contains(normalUrl(site.getUrl())))
                 .findFirst()
                 .orElse(null);
 
         return siteCfg;
     }
 
-    private IndexingResponse indexAndSavePage(String url, Site modelSite, String path) {
+    private IndexingResponse indexingAndSavePage(String url, Site modelSite, String path) {
         try {
             Connection connection = LinkParser.getConnection(url, agentCfg);
             int statusCode = LinkParser.getStatusCode(connection);
@@ -170,8 +170,10 @@ public class IndexingServiceImpl implements IndexingService {
             repositoryPage.save(newPage);
             new LemmaIndexer(modelSite, newPage, repositoryLemma, repositoryIndex).run();
             System.out.println("** PAGE " + url + " IS INDEXED ** " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
-            modelSite.setStatus(Site.Status.INDEXED);
-            modelSite.setLastError("");
+            modelSite.setStatus(repositorySite.findStatusByUrl(modelSite.getUrl()));
+            if (modelSite.getStatus() != Site.Status.FAILED) {
+                modelSite.setLastError("");
+            }
             modelSite.setStatusTime(new Date());
             repositorySite.save(modelSite);
 
@@ -187,8 +189,8 @@ public class IndexingServiceImpl implements IndexingService {
         }
     }
 
-    private void deletePage(String path) {
-        Page oldPage = repositoryPage.findEntityPageByPath(path);
+    private void deletePage(String path, Site modelSite) {
+        Page oldPage = repositoryPage.findPageByPathAndSite(path, modelSite);
         if (oldPage != null) {
             List<Index> entities = repositoryIndex.findByPageIn(oldPage);
             entities.forEach(entity -> {

@@ -10,17 +10,13 @@ import searchengine.config.UserAgentsCfg;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import static java.lang.Thread.sleep;
-
 public class LinkParser {
 
     public static Connection getConnection(String url, UserAgentsCfg userAgents) {
-        //sleep(150);
         return Jsoup.connect(url)
                 .userAgent(userAgents.getRandomUser())
                 .referrer(userAgents.getRandomUser())
                 .ignoreHttpErrors(true)
-                //.timeout(15_000)
                 .followRedirects(true);
     }
 
