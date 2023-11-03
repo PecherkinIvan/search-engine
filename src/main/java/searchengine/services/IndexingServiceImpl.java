@@ -118,7 +118,7 @@ public class IndexingServiceImpl implements IndexingService {
 
         Site modelSite = repositorySite.findSiteByUrl(siteCfg.getUrl());
         if (modelSite == null) {
-            modelSite = new Site(Site.Status.INDEXING, new Date(), siteCfg.getUrl(), siteCfg.getName());
+            modelSite = new Site(null, new Date(), siteCfg.getUrl(), siteCfg.getName());
             repositorySite.save(modelSite);
         }
 
